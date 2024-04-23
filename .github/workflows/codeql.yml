@@ -44,8 +44,14 @@ jobs:
       fail-fast: false
       
       matrix:
-        
-        language: ['javascript-typescript','c-cpp']
+        include:
+      # Analyze C and C++ code
+          - language: c-cpp
+            build-mode: autobuild
+      # Analyze Go code
+          - language: javascript-typescript
+            build-mode: none
+            
         
         # CodeQL supports the following values keywords for 'language': 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
@@ -64,7 +70,7 @@ jobs:
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
-
+        build-mode: ${{ matrix.build-mode }}
     - name: Autobuild
       uses: github/codeql-action/autobuild@v3
         
