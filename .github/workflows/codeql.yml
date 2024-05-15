@@ -47,7 +47,7 @@ jobs:
         include:
       # Analyze C and C++ code
           - language: c-cpp
-            build-mode: autobuild
+            build-mode: manual
       # Analyze Go code
           - language: javascript-typescript
             build-mode: none
