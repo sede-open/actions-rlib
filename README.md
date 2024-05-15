@@ -1,5 +1,7 @@
 # GitHub Actions for the R language
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8907/badge)](https://www.bestpractices.dev/projects/8907)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/r-lib/actions/badge)](https://securityscorecards.dev/viewer/?uri=github.com/r-lib/actions)
 [![R build status](https://github.com/r-lib/actions/workflows/R-CMD-check/badge.svg)](https://github.com/r-lib/actions/actions?workflow=R-CMD-check)
 [![RStudio community](https://img.shields.io/badge/community-github--actions-blue?style=social&logo=rstudio&logoColor=75AADB)](https://community.rstudio.com/new-topic?category=Package%20development&tags=github-actions)
 
@@ -35,7 +37,6 @@ You can refer to these as well in your workflow files if you need to.
 1. [r-lib/actions/check-r-package](https://github.com/r-lib/actions/tree/v2/check-r-package) - Runs `R CMD check` on an R package
 1. [r-lib/actions/pr-fetch](https://github.com/r-lib/actions/tree/v2/pr-fetch) - Fetches changes of a PR associated with an event
 1. [r-lib/actions/pr-push](https://github.com/r-lib/actions/tree/v2/pr-push) - Pushes changes to a PR associated with an event
-1. [r-lib/actions/run-rchk](https://github.com/r-lib/actions/tree/v2/run-rchk) - Runs [rchk](https://github.com/kalibera/rchk) tests to detect memory protection errors in C source code
 
 ## Other GitHub Actions for R projects
 
@@ -75,8 +76,20 @@ If your build fails, and you are unsure of why, here are some useful strategies 
    pinned issues at the top first! We pin issues that affect many people, and the
    issue discussions often contain workarounds.
 1. Otherwise open a [new issue in this repo](https://github.com/r-lib/actions/issues/new/choose).
-   
+
 > If using a general search engine or GitHub search about your problem/idea, please note that content published prior to the Fall 2019 is probably outdated because the beta version of GitHub Actions was different. More recent posts or answers could be outdated too since GitHub Actions evolve, so refer to [GitHub Actions official docs](https://help.github.com/en/actions) in case of doubt (and to existing working workflows) and [GitHub changelog](https://github.blog/changelog/).
+
+## Contributions
+
+Your contributions are welcome! For new features, or if you are unsure
+about a bug fix, please open issue before submitting a pull request.
+When submitting a pull request, please match the coding style of the
+existing code. For any R code, please refer to the
+[Tidyverse style guide](https://style.tidyverse.org/).
+For TypeScript and JavaScript code, you can run `npm run format`
+to standardize the code formatting.
+Adding a major feature also needs testing, typically by running a
+GHA workflow on the R package in this repository. Thank You!
 
 ## Common questions
 
@@ -92,7 +105,7 @@ If your build fails, and you are unsure of why, here are some useful strategies 
 \
   On Windows, when your repo is checked out using git, the line endings are automatically changed to CRLF. R's check process specifically checks if the `configure.ac` file has these line endings, and will error if it does. To avoid this, add a `.gitattributes` file to the top level of your package with the following to configure git to always use LF line endings for this file: \
   `configure.ac text eol=lf`
-  
+
 1. *How can I customize an action to run R code?*\
 \
 The safest way is to add a `step` to your action, specifying `Rscript {0}` as the `shell` for that step. Here's an example from the [bookdown action](https://github.com/r-lib/actions/tree/v2-branch/examples#build-bookdown-site):
@@ -101,7 +114,7 @@ The safest way is to add a `step` to your action, specifying `Rscript {0}` as th
       run: bookdown::render_book("index.Rmd", quiet = TRUE)
       shell: Rscript {0}
    ```
-  
+
 ## Additional resources
 
 - [GitHub Actions for R](https://www.jimhester.com/talk/2020-rsc-github-actions/), Jim Hester's talk at rstudio::conf 2020. [Recording](https://resources.rstudio.com/rstudio-conf-2020/azure-pipelines-and-github-actions-jim-hester), [slidedeck](https://speakerdeck.com/jimhester/github-actions-for-r).

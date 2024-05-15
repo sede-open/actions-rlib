@@ -5,51 +5,58 @@
 
 Package workflows:
 
--   [`check-release`](#quickstart-ci-workflow) - A simple CI workflow to
-    check with the release version of R.
--   [`check-standard`](#standard-ci-workflow) - A standard CI workflow
-    to check with the release version of R on the three major OSs.
--   [`check-full`](#tidyverse-ci-workflow) - A more complex CI workflow
--   [`test-coverage`](#test-coverage-workflow) - Run `covr::codecov()`
-    on an R package.
--   [`lint`](#lint-workflow) - Run `lintr::lint_package()` on an R
-    package.
--   [`pr-commands`](#commands-workflow) - Adds `/document` and `/style`
-    commands for pull requests.
--   [`pkgdown`](#build-pkgdown-site) - Build a
-    [pkgdown](https://pkgdown.r-lib.org/) site for an R package and
-    deploy it to [GitHub Pages](https://pages.github.com/).
--   [`document`](#document-package) - Run `roxygen2::roxygenise()` on an
-    R package.
--   [`style`](#style-package) - Run `styler::style_pkg()` on an R
-    package.
+- [`check-release`](#quickstart-ci-workflow) - A simple CI workflow to
+  check with the release version of R.
+- [`check-standard`](#standard-ci-workflow) - A standard CI workflow to
+  check with the release version of R on the three major OSs.
+- [`check-full`](#tidyverse-ci-workflow) - A more complex CI workflow
+- [`test-coverage`](#test-coverage-workflow) - Run `covr::codecov()` on
+  an R package.
+- [`lint`](#lint-workflow) - Run `lintr::lint_package()` on an R
+  package.
+- [`pr-commands`](#commands-workflow) - Adds `/document` and `/style`
+  commands for pull requests.
+- [`pkgdown`](#build-pkgdown-site) - Build a
+  [pkgdown](https://pkgdown.r-lib.org/) site for an R package and deploy
+  it to [GitHub Pages](https://pages.github.com/) or [Cloudflare
+  Pages](https://pages.cloudflare.com/).
+- [`document`](#document-package) - Run `roxygen2::roxygenise()` on an R
+  package.
+- [`style`](#style-package) - Run `styler::style_pkg()` on an R package.
 
 RMarkdown workflows:
 
--   [`render-rmarkdown`](#render-rmarkdown) - Render one or more
-    Rmarkdown files when they change and commit the result.
--   [`bookdown`](#build-bookdown-site) - Build a
-    [bookdown](https://bookdown.org) site and deploy it to [GitHub
-    Pages](https://pages.github.com/).
--   [`blogdown`](#build-blogdown-site) - Build a
-    [blogdown](https://bookdown.org/yihui/blogdown/) site and deploy it
-    to [GitHub Pages](https://pages.github.com/).
+- [`render-rmarkdown`](#render-rmarkdown) - Render one or more Rmarkdown
+  files when they change and commit the result.
+- [`bookdown`](#build-bookdown-site) - Build a
+  [bookdown](https://bookdown.org) site and deploy it to [GitHub
+  Pages](https://pages.github.com/) or [Cloudflare
+  Pages](https://pages.cloudflare.com/).
+- [`bookdown-gh-pages`](#build-bookdown-site-alternative-workflow) -
+  Alternative workflow to build a [bookdown](https://bookdown.org) site
+  and deploy it to [GitHub Pages](https://pages.github.com/).
+- [`blogdown`](#build-blogdown-site) - Build a
+  [blogdown](https://bookdown.org/yihui/blogdown/) site and deploy it to
+  [GitHub Pages](https://pages.github.com/) or [Cloudflare
+  Pages](https://pages.cloudflare.com/).
+- [`blogdown-gh-pages`](#build-blogdown-site-alternative-workflow) -
+  Alternative workflow to build a
+  [blogdown](https://bookdown.org/yihui/blogdown/) site and deploy it to
+  [GitHub Pages](https://pages.github.com/).
 
 Other workflows:
 
--   [`docker`](#docker-based-workflow) - For custom workflows based on
-    docker containers.
--   [Bioconductor](#bioconductor-friendly-workflow) - A CI workflow for
-    packages to be released on Bioconductor.
--   [`lint-project`](#lint-project-workflow) - Run `lintr::lint_dir()`
-    on an R project.
--   [`shiny-deploy`](#shiny-app-deployment) - Deploy a Shiny app to
-    shinyapps.io or RStudio Connect.
+- [Bioconductor](#bioconductor-friendly-workflow) - A CI workflow for
+  packages to be released on Bioconductor.
+- [`lint-project`](#lint-project-workflow) - Run `lintr::lint_dir()` on
+  an R project.
+- [`shiny-deploy`](#shiny-app-deployment) - Deploy a Shiny app to
+  shinyapps.io or RStudio Connect.
 
 Options and advice:
 
--   [Forcing binaries](#forcing-binaries) - An environment variable to
-    always use binary packages.
+- [Forcing binaries](#forcing-binaries) - An environment variable to
+  always use binary packages.
 
 ## Quickstart CI workflow
 
@@ -77,6 +84,8 @@ on:
 
 name: R-CMD-check
 
+permissions: read-all
+
 jobs:
   R-CMD-check:
     runs-on: ubuntu-latest
@@ -96,6 +105,9 @@ jobs:
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
 ```
 
 ## Standard CI workflow
@@ -123,6 +135,8 @@ on:
     branches: [main, master]
 
 name: R-CMD-check
+
+permissions: read-all
 
 jobs:
   R-CMD-check:
@@ -163,6 +177,7 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
 ```
 
 ## Tidyverse CI workflow
@@ -198,6 +213,8 @@ on:
 
 name: R-CMD-check
 
+permissions: read-all
+
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
@@ -211,17 +228,15 @@ jobs:
           - {os: macos-latest,   r: 'release'}
 
           - {os: windows-latest, r: 'release'}
-          # Use 3.6 to trigger usage of RTools35
-          - {os: windows-latest, r: '3.6'}
           # use 4.1 to check with rtools40's older compiler
           - {os: windows-latest, r: '4.1'}
 
-          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
-          - {os: ubuntu-latest,   r: 'oldrel-1'}
-          - {os: ubuntu-latest,   r: 'oldrel-2'}
-          - {os: ubuntu-latest,   r: 'oldrel-3'}
-          - {os: ubuntu-latest,   r: 'oldrel-4'}
+          - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest,  r: 'release'}
+          - {os: ubuntu-latest,  r: 'oldrel-1'}
+          - {os: ubuntu-latest,  r: 'oldrel-2'}
+          - {os: ubuntu-latest,  r: 'oldrel-3'}
+          - {os: ubuntu-latest,  r: 'oldrel-4'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -246,6 +261,7 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
 ```
 
 ## Test coverage workflow
@@ -257,8 +273,14 @@ the test coverage of your package and upload the result to
 [codecov.io](https://codecov.io)
 
 In theory reporting to codecov.io works automatically, but unfortunately
-in practice it often fails, unless a `CODECOV_TOKEN` secret is set
-in the repository, containing a Codecov repository upload token.
+in practice it often fails, unless a `CODECOV_TOKEN` secret is set in
+the repository, containing a Codecov repository upload token.
+
+If you use the `codecov/codecov-action` action to upload your test
+results to GitHub, like the example here, then you can also use a global
+organization token in an organization secret called `CODECOV_TOKEN`.
+This way you can avoid having to add a secret to each repository of your
+organization.
 
 ``` yaml
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
@@ -271,12 +293,13 @@ on:
 
 name: test-coverage
 
+permissions: read-all
+
 jobs:
   test-coverage:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -287,23 +310,32 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::covr
+          extra-packages: any::covr, any::xml2
           needs: coverage
 
       - name: Test coverage
         run: |
-          covr::codecov(
+          cov <- covr::package_coverage(
             quiet = FALSE,
             clean = FALSE,
-            install_path = file.path(Sys.getenv("RUNNER_TEMP"), "package")
+            install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
           )
+          covr::to_cobertura(cov)
         shell: Rscript {0}
+
+      - uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: ${{ github.event_name != 'pull_request' && true || false }}
+          file: ./cobertura.xml
+          plugin: noop
+          disable_search: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Show testthat output
         if: always()
         run: |
           ## --------------------------------------------------------------------
-          find ${{ runner.temp }}/package -name 'testthat.Rout*' -exec cat '{}' \; || true
+          find '${{ runner.temp }}/package' -name 'testthat.Rout*' -exec cat '{}' \; || true
         shell: bash
 
       - name: Upload test results
@@ -331,6 +363,8 @@ on:
     branches: [main, master]
 
 name: lint
+
+permissions: read-all
 
 jobs:
   lint:
@@ -504,12 +538,21 @@ jobs:
 
 This example builds a [pkgdown](https://pkgdown.r-lib.org/) site for a
 repository and pushes the built package to [GitHub
-Pages](https://pages.github.com/). The inclusion of
+Pages](https://pages.github.com/) or [Cloudflare
+Pages](https://pages.cloudflare.com/). The inclusion of
 [`workflow_dispatch`](https://docs.github.com/en/actions/learn-github-actions/events-that-trigger-workflows#workflow_dispatch)
 means the workflow can be [run manually, from the
 browser](https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow),
 or [triggered via the GitHub REST
 API](https://docs.github.com/en/rest/reference/actions/#create-a-workflow-dispatch-event).
+
+You’ll need to update your setting on GitHub to deploy the `gh-pages`
+(unless configured otherwise) branch of your repository to GitHub Pages.
+
+Similarly, connect your Cloudflare Pages app to the `gh-pages` branch of
+your repository on your Cloudflare dashboard. You’ll need to set
+`exit 0` as the build command for pkgdown sites. See the Cloudflare
+Pages documentation for details.
 
 ``` yaml
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
@@ -524,6 +567,8 @@ on:
   workflow_dispatch:
 
 name: pkgdown
+
+permissions: read-all
 
 jobs:
   pkgdown:
@@ -634,6 +679,8 @@ name: Style
 jobs:
   style:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -704,7 +751,7 @@ jobs:
 
 This example builds a [bookdown](https://bookdown.org) site for a
 repository and then deploys the site via [GitHub
-Pages](https://pages.github.com/). It uses
+Pages](https://pages.github.com/) or Cloudflare Pages. It uses
 [renv](https://rstudio.github.io/renv/) to ensure the package versions
 remain consistent across builds. You will need to run `renv::snapshot()`
 locally and commit the `renv.lock` file before using this workflow, and
@@ -712,6 +759,15 @@ after every time you add a new package to `DESCRIPTION`. See [Using renv
 with Continous
 Integration](https://rstudio.github.io/renv/articles/ci.html) for
 additional information.
+
+You’ll need to update your setting on GitHub to deploy the `_book`
+folder of the `gh-pages` branch (unless configured otherwise) of your
+repository to GitHub Pages.
+
+Similarly, connect your Cloudflare Pages app to the `gh-pages` branch of
+your repository on your Cloudflare dashboard. You’ll need to set
+`exit 0` as the build command for bookdown sites. See the Cloudflare
+Pages documentation for details.
 
 ``` yaml
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
@@ -763,19 +819,104 @@ jobs:
           folder: _book
 ```
 
+## Build bookdown site, alternative workflow
+
+`usethis::use_github_action("bookdown-gh-pages")`
+
+This is an alternative workflow that builds and publishes a bookdown
+book, without creating a separate branch in the repository for the built
+book.
+
+``` yaml
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+name: Deploy bookdown to GH Pages
+
+permissions: read-all
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Only restrict concurrency for non-PR jobs
+    concurrency:
+      group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-renv@v2
+
+      - name: Cache bookdown results
+        uses: actions/cache@v4
+        with:
+          path: _bookdown_files
+          key: bookdown-${{ hashFiles('**/*Rmd') }}
+          restore-keys: bookdown-
+
+      - name: Build site
+        run: bookdown::render_book("index.Rmd", quiet = TRUE)
+        shell: Rscript {0}
+
+      - name: Upload website artifact
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "_book"
+
+  deploy:
+    needs: build
+
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
 ## Build blogdown site
 
 `usethis::use_github_action("blogdown")`
 
 This example builds a [blogdown](https://bookdown.org/yihui/blogdown/)
 site for a repository and then deploys the book via [GitHub
-Pages](https://pages.github.com/). It uses
+Pages](https://pages.github.com/) or Cloudflare Pages. It uses
 [renv](https://rstudio.github.io/renv/) to ensure the package versions
 remain consistent across builds. You will need to run `renv::snapshot()`
 locally and commit the `renv.lock` file before using this workflow, see
 [Using renv with Continous
 Integration](https://rstudio.github.io/renv/articles/ci.html) for
 additional information.
+
+You’ll need to update your setting on GitHub to deploy the `public`
+folder of the `gh-pages` branch (unless configured otherwise) of your
+repository to GitHub Pages.
+
+Similarly, connect your Cloudflare Pages app to the `gh-pages` branch of
+your repository on your Cloudflare dashboard. You’ll need to set
+`exit 0` as the build command for blogdown sites. See the Cloudflare
+Pages documentation for details.
 
 ``` yaml
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
@@ -824,6 +965,79 @@ jobs:
           folder: public
 ```
 
+## Build blogdown site, alternative workflow
+
+`usethis::use_github_action("blogdown-gh-pages")`
+
+This is an alternative workflow that builds and publishes a blogdown
+site, without creating a separate branch in the repository for the built
+site.
+
+``` yaml
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+name: Deploy blogdown to GH Pages
+
+permissions: read-all
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Only restrict concurrency for non-PR jobs
+    concurrency:
+      group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-renv@v2
+
+      - name: Install hugo
+        run: blogdown::install_hugo()
+        shell: Rscript {0}
+
+      - name: Build site
+        run: blogdown::build_site(TRUE)
+        shell: Rscript {0}
+
+      - name: Upload website artifact
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "public"
+
+  deploy:
+    needs: build
+
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
 ## Shiny App Deployment
 
 `usethis::use_github_action("shiny-deploy")`
@@ -841,13 +1055,13 @@ This action assumes you have an `renv` lockfile in your repository that
 describes the `R` packages and versions required for your Shiny
 application.
 
--   See here for information on how to obtain the token and secret for
-    configuring `rsconnect`:
-    <https://shiny.rstudio.com/articles/shinyapps.html>
+- See here for information on how to obtain the token and secret for
+  configuring `rsconnect`:
+  <https://shiny.rstudio.com/articles/shinyapps.html>
 
--   See here for information on how to store private tokens in a
-    repository as GitHub Secrets:
-    <https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository>
+- See here for information on how to store private tokens in a
+  repository as GitHub Secrets:
+  <https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository>
 
 ``` yaml
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
@@ -888,43 +1102,6 @@ jobs:
           rsconnect::setAccountInfo("${{ secrets.RSCONNECT_USER }}", "${{ secrets.RSCONNECT_TOKEN }}", "${{ secrets.RSCONNECT_SECRET }}")
           rsconnect::deployApp(appName = "${{ env.APPNAME }}", account = "${{ env.ACCOUNT }}", server = "${{ env.SERVER }}")
         shell: Rscript {0}
-```
-
-## Docker based workflow
-
-`usethis::use_github_action("docker")`
-
-If you develop locally with docker or are used to using other docker
-based CI services and already have a docker container with all of your R
-and system dependencies you can use that in GitHub Actions by adapting
-the following workflow. This example workflow assumes you build some
-model in `fit_model.R` and then have a report in `report.Rmd`. It then
-uploads the rendered html from the report as a build artifact.
-
-``` yaml
-# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
-# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
-on: [push]
-
-name: docker
-
-jobs:
-  docker:
-    runs-on: ubuntu-latest
-    container: rocker/verse
-    steps:
-      - uses: actions/checkout@v4
-
-      - run: |
-          source("fit_model.R")
-          rmarkdown::render("report.Rmd")
-        shell: Rscript {0}
-
-      - name: Upload results
-        uses: actions/upload-artifact@v4
-        with:
-          name: results
-          path: report.html
 ```
 
 ## Bioconductor-friendly workflow
