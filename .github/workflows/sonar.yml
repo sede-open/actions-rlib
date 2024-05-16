@@ -10,7 +10,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     env:
-      BUILD_WRAPPER_OUT_DIR: ./satya
+      BUILD_WRAPPER_OUT_DIR: bw-output
     steps:
       - uses: actions/checkout@v4
         with:
